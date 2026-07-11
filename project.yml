@@ -1,0 +1,28 @@
+name: SMBBackup
+options:
+  bundleIdPrefix: com.smbbackup
+targets:
+  SMBBackup:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - Sources
+    info:
+      properties:
+        CFBundleDisplayName: "SMB Backup"
+        CFBundleIdentifier: "com.smbbackup.app"
+        UILaunchScreen: {}
+        UIBackgroundModes:
+          - fetch
+          - processing
+        BGTaskSchedulerPermittedIdentifiers:
+          - com.smbbackup.upload
+        NSPhotoLibraryUsageDescription: "Diese App benötigt Zugriff auf deine Fotomediathek, um Fotos und Videos auf deinen SMB-Server sichern zu können."
+        NSLocalNetworkUsageDescription: "Diese App benötigt Zugriff auf dein lokales Netzwerk, um Verbindungen zum SMB-Server aufzubauen."
+    dependencies:
+      - package: AMSMB2
+packages:
+  AMSMB2:
+    url: https://github.com/amosavian/AMSMB2.git
+    from: 3.0.0
