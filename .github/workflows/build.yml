@@ -1,0 +1,50 @@
+name: Build Unsigned iOS App
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # Ermöglicht manuelles Starten
+
+jobs:
+  build:
+    name: Build Unsigned IPA
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: |
+          brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: |
+          xcodegen generate
+
+      - name: Build App (Unsigned)
+        run: |
+          xcodebuild -project SMBBackup.xcodeproj \
+            -scheme SMBBackup \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            clean build
+
+      - name: Package IPA
+        run: |
+          mkdir Payload
+          cp -r build/Build/Products/Release-iphoneos/SMBBackup.app Payload/
+          zip -r SMBBackup.ipa Payload
+
+      - name: Upload Build Artifact (IPA)
+        uses: actions/upload-artifact@v4
+        with:
+          name: SMBBackup-Unsigned-IPA
+          path: SMBBackup.ipa
+          retention-days: 7
