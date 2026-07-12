@@ -23,7 +23,19 @@ jobs:
         run: xcodegen generate
 
       - name: Build App (Unsigned)
-        run: xcodebuild -project SMBBackup.xcodeproj -scheme SMBBackup -configuration Release -sdk iphoneos -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" clean build
+        env:
+          NO_SIGN: NO
+        run: >
+          xcodebuild
+          -project SMBBackup.xcodeproj
+          -scheme SMBBackup
+          -configuration Release
+          -sdk iphoneos
+          -derivedDataPath build
+          CODE_SIGNING_ALLOWED=$NO_SIGN
+          CODE_SIGNING_REQUIRED=$NO_SIGN
+          CODE_SIGN_IDENTITY=
+          clean build
 
       - name: Package IPA
         run: |
