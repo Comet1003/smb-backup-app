@@ -5,7 +5,7 @@ on:
     branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
-  workflow_dispatch: # Allows manual trigger from the GitHub UI
+  workflow_dispatch:
 
 jobs:
   build:
@@ -17,24 +17,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install XcodeGen
-        run: |
-          brew install xcodegen
+        run: brew install xcodegen
 
       - name: Generate Xcode Project
-        run: |
-          xcodegen generate
+        run: xcodegen generate
 
       - name: Build App (Unsigned)
-        run: |
-          xcodebuild -project SMBBackup.xcodeproj \
-            -scheme SMBBackup \
-            -configuration Release \
-            -sdk iphoneos \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            clean build
+        run: xcodebuild -project SMBBackup.xcodeproj -scheme SMBBackup -configuration Release -sdk iphoneos -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" clean build
 
       - name: Package IPA
         run: |
