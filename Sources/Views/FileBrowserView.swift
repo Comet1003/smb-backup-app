@@ -52,8 +52,8 @@ public struct FileBrowserView: View {
                                 .foregroundColor(.blue)
                             Text(currentPath)
                                 .font(.caption)
-                                .mono()
-                                .foregroundColor(.white.opacity(0.8))
+                                .monospaced()
+                                .foregroundColor(Color.white.opacity(0.8))
                                 .lineLimit(1)
                             Spacer()
                         }
