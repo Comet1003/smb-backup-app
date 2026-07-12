@@ -26,6 +26,7 @@ targets:
         NSLocalNetworkUsageDescription: "Diese App benoetigt Zugriff auf dein lokales Netzwerk, um Verbindungen zum SMB-Server aufzubauen."
     dependencies:
       - package: AMSMB2
+        embed: true
 packages:
   AMSMB2:
     url: https://github.com/amosavian/AMSMB2.git
