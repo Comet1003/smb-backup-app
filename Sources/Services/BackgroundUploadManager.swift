@@ -99,7 +99,7 @@ public class BackgroundUploadManager: ObservableObject {
         let timeComponents = calendar.dateComponents([.hour, .minute], from: scheduledTime)
         
         // Create trigger that fires every day at this exact time
-        let trigger = UNCalendarNotificationTrigger(dateComponents: timeComponents, repeats: true)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: timeComponents, repeats: true)
         
         let request = UNNotificationRequest(
             identifier: "com.smbbackup.daily_notification",
