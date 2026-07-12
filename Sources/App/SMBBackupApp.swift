@@ -5,13 +5,15 @@ import BackgroundTasks
 struct SMBBackupApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        // Register the background processing task handler
+        // Note: This MUST be done during app launch before any view appears (in init)
+        registerBackgroundTask()
+    }
+
     var body: some Scene {
         WindowGroup {
             MainTabView()
-                .onAppear {
-                    // Register background task safely AFTER app is visible
-                    registerBackgroundTask()
-                }
                 .onChange(of: scenePhase, perform: { newPhase in
                     switch newPhase {
                     case .background:
@@ -19,11 +21,9 @@ struct SMBBackupApp: App {
                             BackgroundUploadManager.shared.scheduleBackgroundProcessing()
                         }
                     case .active:
-                        // Delay notification request to avoid crash on first launch
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                            Task {
-                                _ = await BackgroundUploadManager.shared.requestNotificationPermission()
-                            }
+                        // Request notification permissions when app becomes active
+                        Task {
+                            _ = await BackgroundUploadManager.shared.requestNotificationPermission()
                         }
                     default:
                         break
@@ -33,13 +33,18 @@ struct SMBBackupApp: App {
     }
 
     private func registerBackgroundTask() {
-        BGTaskScheduler.shared.register(
+        let registered = BGTaskScheduler.shared.register(
             forTaskWithIdentifier: BackgroundUploadManager.taskId,
             using: nil
         ) { task in
             if let processingTask = task as? BGProcessingTask {
                 handleBackgroundUpload(task: processingTask)
             }
+        }
+        if registered {
+            print("Hintergrund-Task erfolgreich registriert.")
+        } else {
+            print("Fehler bei der Registrierung des Hintergrund-Tasks.")
         }
     }
 
