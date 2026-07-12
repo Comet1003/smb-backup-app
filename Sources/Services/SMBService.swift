@@ -191,7 +191,7 @@ public class SMBService: ObservableObject {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             manager.uploadItem(at: localURL, toPath: remotePath, progress: { bytesSent in
                 Task { @MainActor in
-                    self.transferProgress = bytesSent
+                    self.transferProgress = Double(bytesSent)
                 }
                 return true // Continue upload
             }, completionHandler: { error in
