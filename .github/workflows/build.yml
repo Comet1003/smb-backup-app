@@ -37,6 +37,8 @@ jobs:
 
       - name: Package IPA
         run: |
+          echo "=== Built Products Listing ==="
+          find build/Build/Products/Release-iphoneos/ -maxdepth 3 || echo "No products folder!"
           mkdir Payload
           cp -r build/Build/Products/Release-iphoneos/SMBBackup.app Payload/
           zip -r SMBBackup.ipa Payload
