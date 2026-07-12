@@ -150,9 +150,11 @@ public class SMBService: ObservableObject {
     public func fileExists(atPath path: String) async -> Bool {
         guard let manager = manager else { return false }
         do {
-            // Check if we can fetch properties for the item
-            _ = try await manager.propertiesOfItem(atPath: path)
-            return true
+            // List the parent directory and check if the file name exists
+            let parentPath = (path as NSString).deletingLastPathComponent
+            let fileName = (path as NSString).lastPathComponent
+            let items = try await manager.contentsOfDirectory(atPath: parentPath)
+            return items.contains { $0.name == fileName }
         } catch {
             return false
         }
@@ -187,10 +189,9 @@ public class SMBService: ObservableObject {
         }
         
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            manager.uploadItem(at: localURL, toPath: remotePath, progress: { (bytesSent, totalBytes) in
-                let progress = Double(bytesSent) / Double(totalBytes)
+            manager.uploadItem(at: localURL, toPath: remotePath, progress: { bytesSent in
                 Task { @MainActor in
-                    self.transferProgress = progress
+                    self.transferProgress = bytesSent
                 }
                 return true // Continue upload
             }, completionHandler: { error in
