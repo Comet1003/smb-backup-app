@@ -7,19 +7,23 @@ targets:
     platform: iOS
     deploymentTarget: "16.0"
     sources:
-      - Sources
+      - path: Sources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.smbbackup.app
+        SWIFT_VERSION: "5.9"
     info:
+      path: Sources/Info.plist
       properties:
         CFBundleDisplayName: "SMB Backup"
-        CFBundleIdentifier: "com.smbbackup.app"
         UILaunchScreen: {}
         UIBackgroundModes:
           - fetch
           - processing
         BGTaskSchedulerPermittedIdentifiers:
           - com.smbbackup.upload
-        NSPhotoLibraryUsageDescription: "Diese App benötigt Zugriff auf deine Fotomediathek, um Fotos und Videos auf deinen SMB-Server sichern zu können."
-        NSLocalNetworkUsageDescription: "Diese App benötigt Zugriff auf dein lokales Netzwerk, um Verbindungen zum SMB-Server aufzubauen."
+        NSPhotoLibraryUsageDescription: "Diese App benoetigt Zugriff auf deine Fotomediathek, um Fotos und Videos sichern zu koennen."
+        NSLocalNetworkUsageDescription: "Diese App benoetigt Zugriff auf dein lokales Netzwerk, um Verbindungen zum SMB-Server aufzubauen."
     dependencies:
       - package: AMSMB2
 packages:
