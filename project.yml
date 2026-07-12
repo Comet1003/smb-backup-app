@@ -13,6 +13,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.smbbackup.app
         SWIFT_VERSION: "5.9"
     info:
+      path: Sources/Info.plist
       properties:
         CFBundleDisplayName: "SMB Backup"
         UILaunchScreen: {}
