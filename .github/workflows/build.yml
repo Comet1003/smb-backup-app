@@ -22,20 +22,25 @@ jobs:
       - name: Generate Xcode Project
         run: xcodegen generate
 
+      - name: List files after xcodegen
+        run: |
+          echo "=== Root directory ==="
+          ls -la
+          echo "=== xcodeproj contents ==="
+          ls -la SMBBackup.xcodeproj || echo "No SMBBackup.xcodeproj found!"
+
       - name: Build App (Unsigned)
-        env:
-          NO_SIGN: NO
-        run: >
-          xcodebuild
-          -project SMBBackup.xcodeproj
-          -scheme SMBBackup
-          -configuration Release
-          -sdk iphoneos
-          -derivedDataPath build
-          CODE_SIGNING_ALLOWED=$NO_SIGN
-          CODE_SIGNING_REQUIRED=$NO_SIGN
-          CODE_SIGN_IDENTITY=
-          clean build
+        run: |
+          xcodebuild \
+            -project SMBBackup.xcodeproj \
+            -scheme SMBBackup \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            clean build
 
       - name: Package IPA
         run: |
