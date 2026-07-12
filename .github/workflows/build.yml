@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     name: Build Unsigned IPA
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Checkout Code
@@ -21,13 +21,6 @@ jobs:
 
       - name: Generate Xcode Project
         run: xcodegen generate
-
-      - name: List files after xcodegen
-        run: |
-          echo "=== Root directory ==="
-          ls -la
-          echo "=== xcodeproj contents ==="
-          ls -la SMBBackup.xcodeproj || echo "No SMBBackup.xcodeproj found!"
 
       - name: Build App (Unsigned)
         run: |
