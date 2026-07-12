@@ -119,7 +119,7 @@ public class MediaBackupService: ObservableObject {
         // 5. Iterate and upload each asset
         for (index, asset) in assetsToBackup.enumerated() {
             // Check for background task expiration
-            if let isExpired = expirationHandler?, isExpired() {
+            if let isExpired = expirationHandler, isExpired() {
                 lastErrorMsg = "Hintergrundaufgabe durch iOS vorzeitig beendet"
                 break
             }
