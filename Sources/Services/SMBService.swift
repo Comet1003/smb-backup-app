@@ -240,4 +240,26 @@ public class SMBService: ObservableObject {
             })
         }
     }
+    
+    /// Sets the creation and modification dates of a remote file.
+    public func setFileDates(atPath path: String, creationDate: Date, modificationDate: Date) async throws {
+        guard let manager = manager else {
+            throw NSError(domain: "SMBService", code: 401, userInfo: [NSLocalizedDescriptionKey: "Nicht verbunden"])
+        }
+        
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            let attributes: [URLResourceKey: Any] = [
+                .creationDateKey: creationDate,
+                .contentModificationDateKey: modificationDate
+            ]
+            
+            manager.setAttributes(attributes, ofItemAtPath: path) { error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: ())
+                }
+            }
+        }
+    }
 }
