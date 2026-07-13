@@ -1,5 +1,6 @@
 import SwiftUI
 import Photos
+import AVKit
 
 public struct FileBrowserView: View {
     @ObservedObject var smbService: SMBService
@@ -12,6 +13,11 @@ public struct FileBrowserView: View {
     @State private var alertMessage = ""
     @State private var showAlert = false
     @State private var isDownloading = false
+    
+    // Preview States
+    @State private var selectedPreviewItem: SMBFileItem?
+    @State private var previewLocalURL: URL?
+    @State private var isDownloadingPreview = false
     
     public init(smbService: SMBService) {
         self.smbService = smbService
@@ -132,27 +138,37 @@ public struct FileBrowserView: View {
                                         }
                                     } else {
                                         HStack {
-                                            Image(systemName: getFileIcon(filename: item.name))
-                                                .foregroundColor(getFileIconColor(filename: item.name))
-                                                .frame(width: 30)
-                                            
-                                            VStack(alignment: .leading, spacing: 4) {
-                                                Text(item.name)
-                                                    .foregroundColor(.white)
-                                                    .lineLimit(1)
-                                                
-                                                HStack(spacing: 12) {
-                                                    Text(formatBytes(item.size))
-                                                        .font(.caption2)
-                                                        .foregroundColor(.gray)
+                                            // Make the file row tappable for preview
+                                            Button(action: {
+                                                openPreview(for: item)
+                                            }) {
+                                                HStack {
+                                                    Image(systemName: getFileIcon(filename: item.name))
+                                                        .foregroundColor(getFileIconColor(filename: item.name))
+                                                        .frame(width: 30)
                                                     
-                                                    if let date = item.modificationDate {
-                                                        Text(formatDate(date))
-                                                            .font(.caption2)
-                                                            .foregroundColor(.gray)
+                                                    VStack(alignment: .leading, spacing: 4) {
+                                                        Text(item.name)
+                                                            .foregroundColor(.white)
+                                                            .lineLimit(1)
+                                                            .multilineTextAlignment(.leading)
+                                                        
+                                                        HStack(spacing: 12) {
+                                                            Text(formatBytes(item.size))
+                                                                .font(.caption2)
+                                                                .foregroundColor(.gray)
+                                                            
+                                                            if let date = item.modificationDate {
+                                                                Text(formatDate(date))
+                                                                    .font(.caption2)
+                                                                    .foregroundColor(.gray)
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
+                                            .buttonStyle(PlainButtonStyle())
+                                            
                                             Spacer()
                                             
                                             Button(action: {
@@ -173,6 +189,118 @@ public struct FileBrowserView: View {
                         .refreshable {
                             await refreshDirectory()
                         }
+                    }
+                }
+                
+                // Loading Overlay for Preview
+                if isDownloadingPreview {
+                    ZStack {
+                        Color.black.opacity(0.6)
+                            .ignoresSafeArea()
+                        
+                        VStack(spacing: 16) {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(1.5)
+                            Text("Vorschau wird geladen...")
+                                .foregroundColor(.white)
+                                .bold()
+                            if smbService.isTransferring {
+                                Text("\(Int(smbService.transferProgress * 100))%")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                        .padding(30)
+                        .background(Color(red: 0.1, green: 0.12, blue: 0.2))
+                        .cornerRadius(15)
+                        .shadow(radius: 10)
+                    }
+                }
+                
+                // Preview Overlay Modal
+                if let previewItem = selectedPreviewItem, let localURL = previewLocalURL, !isDownloadingPreview {
+                    ZStack {
+                        Color.black.opacity(0.8)
+                            .ignoresSafeArea()
+                            .onTapGesture {
+                                closePreview()
+                            }
+                        
+                        VStack(spacing: 20) {
+                            HStack {
+                                Text(previewItem.name)
+                                    .font(.headline)
+                                    .bold()
+                                    .foregroundColor(.white)
+                                    .lineLimit(1)
+                                Spacer()
+                                Button(action: {
+                                    closePreview()
+                                }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.title)
+                                        .foregroundColor(.white.opacity(0.7))
+                                }
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, 10)
+                            
+                            // Preview content container
+                            Group {
+                                if isImageFile(filename: previewItem.name) {
+                                    if let uiImage = UIImage(contentsOfFile: localURL.path) {
+                                        Image(uiImage: uiImage)
+                                            .resizable()
+                                            .scaledToFit()
+                                            .cornerRadius(10)
+                                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    } else {
+                                        VStack {
+                                            Image(systemName: "photo")
+                                                .font(.system(size: 60))
+                                                .foregroundColor(.gray)
+                                            Text("Bild konnte nicht geladen werden")
+                                                .foregroundColor(.gray)
+                                        }
+                                    }
+                                } else if isVideoFile(filename: previewItem.name) {
+                                    VideoPlayer(player: AVPlayer(url: localURL))
+                                        .cornerRadius(10)
+                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                } else {
+                                    VStack(spacing: 12) {
+                                        Image(systemName: "doc.fill")
+                                            .font(.system(size: 60))
+                                            .foregroundColor(.gray)
+                                        Text("Keine Vorschau verfügbar")
+                                            .foregroundColor(.gray)
+                                        Text(formatBytes(previewItem.size))
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
+                                }
+                            }
+                            .frame(maxHeight: 350)
+                            .padding(.horizontal)
+                            
+                            // Share link
+                            ShareLink(item: localURL, preview: SharePreview(previewItem.name, image: Image(systemName: "doc"))) {
+                                Label("Teilen / Sichern", systemImage: "square.and.arrow.up")
+                                    .bold()
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color.blue)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(12)
+                            }
+                            .padding(.horizontal)
+                            .padding(.bottom, 10)
+                        }
+                        .background(Color(red: 0.08, green: 0.09, blue: 0.15))
+                        .cornerRadius(20)
+                        .shadow(radius: 20)
+                        .padding(.horizontal, 20)
                     }
                 }
             }
@@ -273,6 +401,48 @@ public struct FileBrowserView: View {
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter.string(from: date)
+    }
+    
+    private func isImageFile(filename: String) -> Bool {
+        let ext = (filename as NSString).pathExtension.lowercased()
+        return ["jpg", "jpeg", "png", "heic", "raw"].contains(ext)
+    }
+    
+    private func isVideoFile(filename: String) -> Bool {
+        let ext = (filename as NSString).pathExtension.lowercased()
+        return ["mp4", "mov", "m4v", "avi"].contains(ext)
+    }
+    
+    // Preview actions
+    private func openPreview(for item: SMBFileItem) {
+        selectedPreviewItem = item
+        isDownloadingPreview = true
+        
+        let tempDir = FileManager.default.temporaryDirectory
+        let tempURL = tempDir.appendingPathComponent("preview_" + UUID().uuidString + "_" + item.name)
+        previewLocalURL = tempURL
+        
+        Task {
+            do {
+                try await smbService.downloadFile(remotePath: item.path, localURL: tempURL)
+                isDownloadingPreview = false
+            } catch {
+                isDownloadingPreview = false
+                alertTitle = "Fehler"
+                alertMessage = "Vorschau konnte nicht geladen werden: \(error.localizedDescription)"
+                showAlert = true
+                closePreview()
+            }
+        }
+    }
+    
+    private func closePreview() {
+        if let url = previewLocalURL {
+            try? FileManager.default.removeItem(at: url)
+        }
+        selectedPreviewItem = nil
+        previewLocalURL = nil
+        isDownloadingPreview = false
     }
     
     // Download logic
