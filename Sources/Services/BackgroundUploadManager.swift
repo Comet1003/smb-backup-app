@@ -14,7 +14,7 @@ public class BackgroundUploadManager: ObservableObject {
             UserDefaults.standard.set(autoBackupEnabled, forKey: autoBackupKey)
             if autoBackupEnabled {
                 scheduleBackgroundProcessing()
-                scheduleLocalNotification()
+                // scheduleLocalNotification() // Removed to allow silent background execution
             } else {
                 cancelAllTasksAndNotifications()
             }
@@ -26,7 +26,7 @@ public class BackgroundUploadManager: ObservableObject {
             UserDefaults.standard.set(scheduledTime, forKey: scheduledTimeKey)
             if autoBackupEnabled {
                 scheduleBackgroundProcessing()
-                scheduleLocalNotification()
+                // scheduleLocalNotification() // Removed to allow silent background execution
             }
         }
     }
