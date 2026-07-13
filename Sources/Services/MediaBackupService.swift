@@ -133,7 +133,16 @@ public class MediaBackupService: ObservableObject {
             }
             
             let originalFilename = resource.originalFilename
-            self.currentFilename = originalFilename
+            
+            // Format creation date to prefix filename (e.g. 2023-10-24_15-30-45_IMG_1234.JPG)
+            // This ensures natural chronological sorting by name on the server/NAS
+            let creationDate = asset.creationDate ?? Date()
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+            let datePrefix = formatter.string(from: creationDate)
+            let finalFilename = "\(datePrefix)_\(originalFilename)"
+            
+            self.currentFilename = finalFilename
             
             // Generate unique temporary URL for exporting
             let tempFileURL = tempDir.appendingPathComponent(UUID().uuidString).appendingPathExtension((originalFilename as NSString).pathExtension)
@@ -143,7 +152,7 @@ public class MediaBackupService: ObservableObject {
                 try await exportResource(resource, to: tempFileURL)
                 
                 // Determine remote path
-                let remoteFilePath = targetPath == "/" ? "/\(originalFilename)" : "\(targetPath)/\(originalFilename)"
+                let remoteFilePath = targetPath == "/" ? "/\(finalFilename)" : "\(targetPath)/\(finalFilename)"
                 
                 // Check if file already exists on server
                 let fileExistsOnServer = await smbService.fileExists(atPath: remoteFilePath)
@@ -188,7 +197,11 @@ public class MediaBackupService: ObservableObject {
             errorMessage: lastErrorMsg,
             uploadedFiles: assetsToBackup.prefix(successCount).map { asset in
                 let res = PHAssetResource.assetResources(for: asset)
-                return res.first?.originalFilename ?? "Unbenannt"
+                let name = res.first?.originalFilename ?? "Unbenannt"
+                let creationDate = asset.creationDate ?? Date()
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+                return "\(formatter.string(from: creationDate))_\(name)"
             }
         )
         BackupLog.addLog(log)
