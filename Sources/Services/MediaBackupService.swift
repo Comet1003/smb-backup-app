@@ -133,16 +133,7 @@ public class MediaBackupService: ObservableObject {
             }
             
             let originalFilename = resource.originalFilename
-            
-            // Format creation date to prefix filename (e.g. 2023-10-24_15-30-45_IMG_1234.JPG)
-            // This ensures natural chronological sorting by name on the server/NAS
-            let creationDate = asset.creationDate ?? Date()
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
-            let datePrefix = formatter.string(from: creationDate)
-            let finalFilename = "\(datePrefix)_\(originalFilename)"
-            
-            self.currentFilename = finalFilename
+            self.currentFilename = originalFilename
             
             // Generate unique temporary URL for exporting
             let tempFileURL = tempDir.appendingPathComponent(UUID().uuidString).appendingPathExtension((originalFilename as NSString).pathExtension)
@@ -152,7 +143,7 @@ public class MediaBackupService: ObservableObject {
                 try await exportResource(resource, to: tempFileURL)
                 
                 // Determine remote path
-                let remoteFilePath = targetPath == "/" ? "/\(finalFilename)" : "\(targetPath)/\(finalFilename)"
+                let remoteFilePath = targetPath == "/" ? "/\(originalFilename)" : "\(targetPath)/\(originalFilename)"
                 
                 // Check if file already exists on server
                 let fileExistsOnServer = await smbService.fileExists(atPath: remoteFilePath)
@@ -164,6 +155,10 @@ public class MediaBackupService: ObservableObject {
                 } else {
                     // Upload to SMB
                     try await smbService.uploadFile(localURL: tempFileURL, remotePath: remoteFilePath)
+                    
+                    // Set remote file timestamps to match original photo creation date
+                    let photoDate = asset.creationDate ?? Date()
+                    try? await smbService.setFileDates(atPath: remoteFilePath, creationDate: photoDate, modificationDate: photoDate)
                     
                     // Add to uploaded list
                     uploadedIDs.insert(asset.localIdentifier)
@@ -197,11 +192,7 @@ public class MediaBackupService: ObservableObject {
             errorMessage: lastErrorMsg,
             uploadedFiles: assetsToBackup.prefix(successCount).map { asset in
                 let res = PHAssetResource.assetResources(for: asset)
-                let name = res.first?.originalFilename ?? "Unbenannt"
-                let creationDate = asset.creationDate ?? Date()
-                let formatter = DateFormatter()
-                formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
-                return "\(formatter.string(from: creationDate))_\(name)"
+                return res.first?.originalFilename ?? "Unbenannt"
             }
         )
         BackupLog.addLog(log)
