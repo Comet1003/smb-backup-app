@@ -21,22 +21,38 @@ public struct ConnectionSetupView: View {
     public var body: some View {
         NavigationView {
             ZStack {
-                // Background Gradient
-                LinearGradient(
-                    gradient: Gradient(colors: [Color(red: 0.1, green: 0.12, blue: 0.2), Color(red: 0.05, green: 0.05, blue: 0.1)]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                // Flowing neon/glassmorphism background
+                Color(red: 0.04, green: 0.04, blue: 0.08)
+                    .ignoresSafeArea()
+                
+                // Top-left soft glowing blue orb
+                Circle()
+                    .fill(Color.blue.opacity(0.25))
+                    .frame(width: 350, height: 350)
+                    .blur(radius: 90)
+                    .offset(x: -120, y: -250)
+                
+                // Bottom-right soft glowing purple orb
+                Circle()
+                    .fill(Color.purple.opacity(0.2))
+                    .frame(width: 300, height: 300)
+                    .blur(radius: 80)
+                    .offset(x: 140, y: 200)
                 
                 ScrollView {
                     VStack(spacing: 25) {
                         // Title / Header Card
-                        VStack(spacing: 8) {
+                        VStack(spacing: 12) {
                             Image(systemName: "server.rack")
-                                .font(.system(size: 50))
-                                .foregroundColor(.blue)
-                                .shadow(color: .blue.opacity(0.5), radius: 10, x: 0, y: 5)
+                                .font(.system(size: 55))
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [.blue, .cyan],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .shadow(color: .blue.opacity(0.4), radius: 15, x: 0, y: 5)
                             
                             Text("SMB Server Verbindung")
                                 .font(.title2)
@@ -44,20 +60,20 @@ public struct ConnectionSetupView: View {
                                 .foregroundColor(.white)
                             
                             Text("Richte die Verbindung zu deinem Netzwerkspeicher ein, um Backups zu ermöglichen.")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
+                                .font(.footnote)
+                                .foregroundColor(.white.opacity(0.6))
                                 .multilineTextAlignment(.center)
-                                .padding(.horizontal)
+                                .padding(.horizontal, 30)
                         }
-                        .padding(.top, 20)
+                        .padding(.top, 25)
                         
-                        // Credentials Card
-                        VStack(spacing: 16) {
+                        // Credentials Card with glassmorphism
+                        VStack(spacing: 18) {
                             HStack {
                                 Text("SERVER-DATEN")
                                     .font(.caption)
                                     .bold()
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.cyan)
                                 Spacer()
                             }
                             
@@ -73,48 +89,54 @@ public struct ConnectionSetupView: View {
                                     .foregroundColor(.white.opacity(0.8))
                                 HStack {
                                     Image(systemName: "lock.fill")
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.cyan)
                                         .frame(width: 25)
                                     SecureField("Passwort", text: $password)
                                         .foregroundColor(.white)
                                 }
-                                .padding(12)
-                                .background(Color.white.opacity(0.06))
-                                .cornerRadius(10)
+                                .padding(14)
+                                .background(Color.white.opacity(0.04))
+                                .cornerRadius(12)
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
                                 )
                             }
                         }
-                        .padding(20)
-                        .background(Color.white.opacity(0.04))
-                        .cornerRadius(20)
+                        .padding(22)
+                        .background(.ultraThinMaterial) // iOS Native blur
+                        .cornerRadius(24)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 20)
-                                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 24)
+                                .stroke(Color.white.opacity(0.12), lineWidth: 1.5)
                         )
-                        .shadow(color: Color.black.opacity(0.3), radius: 15, x: 0, y: 10)
+                        .shadow(color: Color.black.opacity(0.3), radius: 20, x: 0, y: 12)
                         .padding(.horizontal)
                         
                         // Testing Status or Messages
                         if isTesting {
                             ProgressView("Verbindung wird getestet...")
-                                .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                                .progressViewStyle(CircularProgressViewStyle(tint: .cyan))
                                 .foregroundColor(.white)
                                 .padding()
                         } else if let success = testResultSuccess {
-                            HStack {
+                            HStack(spacing: 12) {
                                 Image(systemName: success ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                                    .font(.title2)
                                     .foregroundColor(success ? .green : .red)
                                 Text(testResultMessage)
                                     .foregroundColor(.white)
                                     .font(.subheadline)
+                                    .bold()
                                 Spacer()
                             }
-                            .padding()
-                            .background(success ? Color.green.opacity(0.1) : Color.red.opacity(0.1))
-                            .cornerRadius(10)
+                            .padding(16)
+                            .background(success ? Color.green.opacity(0.12) : Color.red.opacity(0.12))
+                            .cornerRadius(16)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(success ? Color.green.opacity(0.2) : Color.red.opacity(0.2), lineWidth: 1)
+                            )
                             .padding(.horizontal)
                         }
                         
@@ -130,9 +152,13 @@ public struct ConnectionSetupView: View {
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .background(Color.gray.opacity(0.2))
+                                .background(Color.white.opacity(0.06))
                                 .foregroundColor(.white)
-                                .cornerRadius(12)
+                                .cornerRadius(14)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                )
                                 .bold()
                             }
                             .disabled(isTesting || host.isEmpty || share.isEmpty)
@@ -153,11 +179,17 @@ public struct ConnectionSetupView: View {
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .background(smbService.isConnected ? Color.green : Color.blue)
+                                .background(
+                                    LinearGradient(
+                                        colors: smbService.isConnected ? [.green, .emeraldColor] : [.blue, .cyan],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
                                 .foregroundColor(.white)
-                                .cornerRadius(12)
+                                .cornerRadius(14)
                                 .bold()
-                                .shadow(color: (smbService.isConnected ? Color.green : Color.blue).opacity(0.3), radius: 10, x: 0, y: 5)
+                                .shadow(color: (smbService.isConnected ? Color.green : Color.blue).opacity(0.35), radius: 12, x: 0, y: 5)
                             }
                             .disabled(smbService.isConnecting || host.isEmpty || share.isEmpty)
                         }
@@ -171,21 +203,23 @@ public struct ConnectionSetupView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if smbService.isConnected {
-                        HStack {
+                        HStack(spacing: 6) {
                             Circle()
                                 .fill(Color.green)
                                 .frame(width: 8, height: 8)
                             Text("Verbunden")
                                 .font(.caption)
+                                .bold()
                                 .foregroundColor(.green)
                         }
                     } else {
-                        HStack {
+                        HStack(spacing: 6) {
                             Circle()
                                 .fill(Color.red)
                                 .frame(width: 8, height: 8)
                             Text("Getrennt")
                                 .font(.caption)
+                                .bold()
                                 .foregroundColor(.red)
                         }
                     }
@@ -197,7 +231,7 @@ public struct ConnectionSetupView: View {
         }
     }
     
-    // Custom TextField Helper
+    // Custom TextField Helper with glassmorphism style
     private func customTextField(title: String, text: Binding<String>, icon: String, placeholder: String) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(title)
@@ -206,19 +240,19 @@ public struct ConnectionSetupView: View {
                 .foregroundColor(.white.opacity(0.8))
             HStack {
                 Image(systemName: icon)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.cyan)
                     .frame(width: 25)
                 TextField(placeholder, text: text)
                     .foregroundColor(.white)
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
             }
-            .padding(12)
-            .background(Color.white.opacity(0.06))
-            .cornerRadius(10)
+            .padding(14)
+            .background(Color.white.opacity(0.04))
+            .cornerRadius(12)
             .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
             )
         }
     }
@@ -265,4 +299,9 @@ public struct ConnectionSetupView: View {
             }
         }
     }
+}
+
+// Helper colors for gradients
+extension Color {
+    static let emeraldColor = Color(red: 0.05, green: 0.75, blue: 0.45)
 }
