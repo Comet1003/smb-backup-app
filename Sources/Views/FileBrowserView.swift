@@ -27,44 +27,58 @@ public struct FileBrowserView: View {
         NavigationView {
             ZStack {
                 // Background Gradient
-                LinearGradient(
-                    gradient: Gradient(colors: [Color(red: 0.1, green: 0.12, blue: 0.2), Color(red: 0.05, green: 0.05, blue: 0.1)]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                Color(red: 0.04, green: 0.04, blue: 0.08)
+                    .ignoresSafeArea()
+                
+                Circle()
+                    .fill(Color.blue.opacity(0.2))
+                    .frame(width: 350, height: 350)
+                    .blur(radius: 90)
+                    .offset(x: -120, y: -250)
+                
+                Circle()
+                    .fill(Color.purple.opacity(0.18))
+                    .frame(width: 320, height: 320)
+                    .blur(radius: 80)
+                    .offset(x: 140, y: 220)
                 
                 VStack(spacing: 0) {
                     // Connection Status bar
                     if !smbService.isConnected {
-                        VStack(spacing: 12) {
+                        VStack(spacing: 16) {
                             Image(systemName: "wifi.slash")
-                                .font(.system(size: 40))
+                                .font(.system(size: 50))
                                 .foregroundColor(.red)
                             Text("Nicht verbunden")
                                 .font(.headline)
                                 .foregroundColor(.white)
                             Text("Bitte verbinde dich zuerst im Tab 'Setup' mit deinem SMB-Server.")
                                 .font(.subheadline)
-                                .foregroundColor(.gray)
+                                .foregroundColor(.white.opacity(0.6))
                                 .multilineTextAlignment(.center)
-                                .padding(.horizontal)
+                                .padding(.horizontal, 30)
                         }
                         .frame(maxHeight: .infinity)
                     } else {
-                        // Current Path breadcrumb
+                        // Current Path breadcrumb (Glass style)
                         HStack {
                             Image(systemName: "folder.fill")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.cyan)
                             Text(currentPath)
                                 .font(.caption)
                                 .monospaced()
-                                .foregroundColor(Color.white.opacity(0.8))
+                                .foregroundColor(.white.opacity(0.8))
                                 .lineLimit(1)
                             Spacer()
                         }
                         .padding()
-                        .background(Color.white.opacity(0.04))
+                        .background(.ultraThinMaterial)
+                        .overlay(
+                            Rectangle()
+                                .frame(height: 1)
+                                .foregroundColor(Color.white.opacity(0.1)),
+                            alignment: .bottom
+                        )
                         
                         // Active File Transfer Progress Overlay
                         if smbService.isTransferring {
@@ -78,114 +92,136 @@ public struct FileBrowserView: View {
                                     Spacer()
                                     Text("\(Int(smbService.transferProgress * 100))%")
                                         .font(.caption)
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.cyan)
                                         .bold()
                                 }
                                 ProgressView(value: smbService.transferProgress)
-                                    .progressViewStyle(LinearProgressViewStyle(tint: .blue))
+                                    .progressViewStyle(LinearProgressViewStyle(tint: .cyan))
                             }
                             .padding()
-                            .background(Color.blue.opacity(0.1))
+                            .background(Color.cyan.opacity(0.12))
                         }
                         
-                        // File List
-                        List {
-                            // Up folder button
-                            if currentPath != "/" {
-                                Button(action: {
-                                    goUpOneDirectory()
-                                }) {
-                                    HStack {
-                                        Image(systemName: "arrow.turn.up.left")
-                                            .foregroundColor(.blue)
-                                        Text("Übergeordneter Ordner")
-                                            .foregroundColor(.blue)
-                                            .bold()
+                        // File List (ScrollView with custom Glass Rows for a highly premium aesthetic)
+                        ScrollView {
+                            VStack(spacing: 12) {
+                                // Up folder button
+                                if currentPath != "/" {
+                                    Button(action: {
+                                        goUpOneDirectory()
+                                    }) {
+                                        HStack {
+                                            Image(systemName: "arrow.turn.up.left")
+                                                .foregroundColor(.cyan)
+                                                .bold()
+                                            Text("Übergeordneter Ordner")
+                                                .foregroundColor(.cyan)
+                                                .bold()
+                                            Spacer()
+                                        }
+                                        .padding()
+                                        .background(.ultraThinMaterial)
+                                        .cornerRadius(16)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 16)
+                                                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                                        )
                                     }
                                 }
-                                .listRowBackground(Color.white.opacity(0.02))
-                            }
-                            
-                            if smbService.fileItems.isEmpty {
-                                HStack {
-                                    Spacer()
-                                    Text("Dieser Ordner ist leer.")
-                                        .foregroundColor(.gray)
-                                        .padding()
-                                    Spacer()
-                                }
-                                .listRowBackground(Color.clear)
-                            } else {
-                                ForEach(smbService.fileItems) { item in
-                                    if item.isDirectory {
-                                        Button(action: {
-                                            navigateIntoDirectory(name: item.name)
-                                        }) {
-                                            HStack {
-                                                Image(systemName: "folder.fill")
-                                                    .foregroundColor(.yellow)
-                                                    .frame(width: 30)
-                                                VStack(alignment: .leading) {
-                                                    Text(item.name)
-                                                        .foregroundColor(.white)
-                                                        .bold()
-                                                }
-                                                Spacer()
-                                                Image(systemName: "chevron.right")
-                                                    .foregroundColor(.gray)
-                                                    .font(.caption)
-                                            }
-                                        }
-                                    } else {
-                                        HStack {
-                                            // Make the file row tappable for preview
+                                
+                                if smbService.fileItems.isEmpty {
+                                    VStack(spacing: 12) {
+                                        Image(systemName: "folder.badge.questionmark")
+                                            .font(.largeTitle)
+                                            .foregroundColor(.gray)
+                                        Text("Dieser Ordner ist leer.")
+                                            .foregroundColor(.white.opacity(0.5))
+                                    }
+                                    .padding(.top, 50)
+                                } else {
+                                    ForEach(smbService.fileItems) { item in
+                                        if item.isDirectory {
                                             Button(action: {
-                                                openPreview(for: item)
+                                                navigateIntoDirectory(name: item.name)
                                             }) {
                                                 HStack {
-                                                    Image(systemName: getFileIcon(filename: item.name))
-                                                        .foregroundColor(getFileIconColor(filename: item.name))
+                                                    Image(systemName: "folder.fill")
+                                                        .foregroundColor(.yellow)
                                                         .frame(width: 30)
-                                                    
-                                                    VStack(alignment: .leading, spacing: 4) {
+                                                    VStack(alignment: .leading) {
                                                         Text(item.name)
                                                             .foregroundColor(.white)
-                                                            .lineLimit(1)
-                                                            .multilineTextAlignment(.leading)
+                                                            .bold()
+                                                    }
+                                                    Spacer()
+                                                    Image(systemName: "chevron.right")
+                                                        .foregroundColor(.white.opacity(0.4))
+                                                        .font(.caption)
+                                                }
+                                                .padding()
+                                                .background(.ultraThinMaterial)
+                                                .cornerRadius(18)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 18)
+                                                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                                )
+                                            }
+                                        } else {
+                                            HStack {
+                                                Button(action: {
+                                                    openPreview(for: item)
+                                                }) {
+                                                    HStack {
+                                                        Image(systemName: getFileIcon(filename: item.name))
+                                                            .foregroundColor(getFileIconColor(filename: item.name))
+                                                            .frame(width: 30)
                                                         
-                                                        HStack(spacing: 12) {
-                                                            Text(formatBytes(item.size))
-                                                                .font(.caption2)
-                                                                .foregroundColor(.gray)
+                                                        VStack(alignment: .leading, spacing: 4) {
+                                                            Text(item.name)
+                                                                .foregroundColor(.white)
+                                                                .lineLimit(1)
+                                                                .multilineTextAlignment(.leading)
                                                             
-                                                            if let date = item.modificationDate {
-                                                                Text(formatDate(date))
+                                                            HStack(spacing: 12) {
+                                                                Text(formatBytes(item.size))
                                                                     .font(.caption2)
-                                                                    .foregroundColor(.gray)
+                                                                    .foregroundColor(.white.opacity(0.5))
+                                                                
+                                                                if let date = item.modificationDate {
+                                                                    Text(formatDate(date))
+                                                                        .font(.caption2)
+                                                                        .foregroundColor(.white.opacity(0.5))
+                                                                }
                                                             }
                                                         }
                                                     }
                                                 }
+                                                .buttonStyle(PlainButtonStyle())
+                                                
+                                                Spacer()
+                                                
+                                                Button(action: {
+                                                    downloadFileToPhotos(item: item)
+                                                }) {
+                                                    Image(systemName: "arrow.down.circle")
+                                                        .font(.title3)
+                                                        .foregroundColor(.cyan)
+                                                }
+                                                .buttonStyle(BorderlessButtonStyle())
                                             }
-                                            .buttonStyle(PlainButtonStyle())
-                                            
-                                            Spacer()
-                                            
-                                            Button(action: {
-                                                downloadFileToPhotos(item: item)
-                                            }) {
-                                                Image(systemName: "arrow.down.circle")
-                                                    .font(.title3)
-                                                    .foregroundColor(.blue)
-                                            }
-                                            .buttonStyle(BorderlessButtonStyle())
+                                            .padding()
+                                            .background(.ultraThinMaterial)
+                                            .cornerRadius(18)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 18)
+                                                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                            )
                                         }
                                     }
                                 }
-                                .listRowBackground(Color.white.opacity(0.03))
                             }
+                            .padding()
                         }
-                        .listStyle(PlainListStyle())
                         .refreshable {
                             await refreshDirectory()
                         }
@@ -200,7 +236,7 @@ public struct FileBrowserView: View {
                         
                         VStack(spacing: 16) {
                             ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .progressViewStyle(CircularProgressViewStyle(tint: .cyan))
                                 .scaleEffect(1.5)
                             Text("Vorschau wird geladen...")
                                 .foregroundColor(.white)
@@ -212,8 +248,12 @@ public struct FileBrowserView: View {
                             }
                         }
                         .padding(30)
-                        .background(Color(red: 0.1, green: 0.12, blue: 0.2))
-                        .cornerRadius(15)
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(20)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color.white.opacity(0.15), lineWidth: 1.5)
+                        )
                         .shadow(radius: 10)
                     }
                 }
@@ -253,7 +293,7 @@ public struct FileBrowserView: View {
                                         Image(uiImage: uiImage)
                                             .resizable()
                                             .scaledToFit()
-                                            .cornerRadius(10)
+                                            .cornerRadius(14)
                                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                                     } else {
                                         VStack {
@@ -266,7 +306,7 @@ public struct FileBrowserView: View {
                                     }
                                 } else if isVideoFile(filename: previewItem.name) {
                                     VideoPlayer(player: AVPlayer(url: localURL))
-                                        .cornerRadius(10)
+                                        .cornerRadius(14)
                                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 } else {
                                     VStack(spacing: 12) {
@@ -290,15 +330,26 @@ public struct FileBrowserView: View {
                                     .bold()
                                     .padding()
                                     .frame(maxWidth: .infinity)
-                                    .background(Color.blue)
+                                    .background(
+                                        LinearGradient(
+                                            colors: [.blue, .cyan],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
                                     .foregroundColor(.white)
-                                    .cornerRadius(12)
+                                    .cornerRadius(14)
                             }
                             .padding(.horizontal)
                             .padding(.bottom, 10)
                         }
-                        .background(Color(red: 0.08, green: 0.09, blue: 0.15))
-                        .cornerRadius(20)
+                        .padding(10)
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(24)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 24)
+                                .stroke(Color.white.opacity(0.18), lineWidth: 1.5)
+                        )
                         .shadow(radius: 20)
                         .padding(.horizontal, 20)
                     }
@@ -313,7 +364,7 @@ public struct FileBrowserView: View {
                             showPhotoPicker = true
                         }) {
                             Image(systemName: "plus")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.cyan)
                         }
                     }
                 }
@@ -381,11 +432,11 @@ public struct FileBrowserView: View {
         let ext = (filename as NSString).pathExtension.lowercased()
         switch ext {
         case "jpg", "jpeg", "png", "heic", "raw":
-            return .blue
+            return .cyan
         case "mp4", "mov", "m4v", "avi":
             return .purple
         default:
-            return .gray
+            return .white.opacity(0.7)
         }
     }
     
