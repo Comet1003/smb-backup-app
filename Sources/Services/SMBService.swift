@@ -253,7 +253,7 @@ public class SMBService: ObservableObject {
                 .contentModificationDateKey: modificationDate
             ]
             
-            manager.setAttributes(attributes, ofItemAtPath: path) { error in
+            manager.setAttributes(attributes: attributes, ofItemAtPath: path) { error in
                 if let error = error {
                     continuation.resume(throwing: error)
                 } else {
