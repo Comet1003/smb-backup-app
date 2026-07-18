@@ -104,7 +104,7 @@ public struct FileBrowserView: View {
                         
                         // File List (ScrollView with custom Glass Rows for a highly premium aesthetic)
                         ScrollView {
-                            VStack(spacing: 12) {
+                            LazyVStack(spacing: 12) {
                                 // Up folder button
                                 if currentPath != "/" {
                                     Button(action: {
