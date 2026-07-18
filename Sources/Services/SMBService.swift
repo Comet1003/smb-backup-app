@@ -109,34 +109,37 @@ public class SMBService: ObservableObject {
         
         do {
             let entries = try await manager.contentsOfDirectory(atPath: path)
-            var items: [SMBFileItem] = []
             
-            for entry in entries {
-                let name = entry[.nameKey] as? String ?? "Unbekannt"
-                // Construct file path
-                let rawPath = path == "/" ? "/\(name)" : "\(path)/\(name)"
-                
-                let size = entry[.fileSizeKey] as? Int64 ?? 0
-                let type = entry[.fileResourceTypeKey] as? URLFileResourceType
-                let isDir = type == .directory
-                let modificationDate = entry[.contentModificationDateKey] as? Date
-                
-                items.append(SMBFileItem(
-                    name: name,
-                    path: rawPath,
-                    isDirectory: isDir,
-                    size: size,
-                    modificationDate: modificationDate
-                ))
-            }
-            
-            // Sort directories first, then alphabetically
-            items.sort {
-                if $0.isDirectory != $1.isDirectory {
-                    return $0.isDirectory && !$1.isDirectory
+            // Perform mapping and sorting in a background task to keep the MainActor/UI thread free
+            let items = await Task.detached(priority: .userInitiated) { () -> [SMBFileItem] in
+                var mappedItems: [SMBFileItem] = []
+                for entry in entries {
+                    let name = entry[.nameKey] as? String ?? "Unbekannt"
+                    let rawPath = path == "/" ? "/\(name)" : "\(path)/\(name)"
+                    let size = entry[.fileSizeKey] as? Int64 ?? 0
+                    let type = entry[.fileResourceTypeKey] as? URLFileResourceType
+                    let isDir = type == .directory
+                    let modificationDate = entry[.contentModificationDateKey] as? Date
+                    
+                    mappedItems.append(SMBFileItem(
+                        name: name,
+                        path: rawPath,
+                        isDirectory: isDir,
+                        size: size,
+                        modificationDate: modificationDate
+                    ))
                 }
-                return $0.name.localizedStandardCompare($1.name) == .orderedAscending
-            }
+                
+                // Sort directories first, then alphabetically
+                mappedItems.sort {
+                    if $0.isDirectory != $1.isDirectory {
+                        return $0.isDirectory && !$1.isDirectory
+                    }
+                    return $0.name.localizedStandardCompare($1.name) == .orderedAscending
+                }
+                
+                return mappedItems
+            }.value
             
             self.fileItems = items
             return items
