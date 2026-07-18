@@ -130,12 +130,22 @@ public class SMBService: ObservableObject {
                     ))
                 }
                 
-                // Sort directories first, then alphabetically
+                // Sort directories first (alphabetically), then files by modification date descending (newest first)
                 mappedItems.sort {
                     if $0.isDirectory != $1.isDirectory {
                         return $0.isDirectory && !$1.isDirectory
                     }
-                    return $0.name.localizedStandardCompare($1.name) == .orderedAscending
+                    
+                    if $0.isDirectory {
+                        return $0.name.localizedStandardCompare($1.name) == .orderedAscending
+                    } else {
+                        if let date0 = $0.modificationDate, let date1 = $1.modificationDate {
+                            if date0 != date1 {
+                                return date0 > date1 // Newest first
+                            }
+                        }
+                        return $0.name.localizedStandardCompare($1.name) == .orderedDescending
+                    }
                 }
                 
                 return mappedItems
