@@ -6,10 +6,10 @@ public struct SMBConnectionConfig: Codable, Equatable {
     public var path: String
     public var username: String
     
-    public init(host: String = "", share: String = "", path: String = "/", username: String = "") {
+    public init(host: String = "192.168.178.158", share: String = "Share", path: String = "/Iphone_Bilder", username: String = "Benjamin") {
         self.host = host
         self.share = share
-        self.path = path.isEmpty ? "/" : (path.hasPrefix("/") ? path : "/" + path)
+        self.path = path.isEmpty ? "/Iphone_Bilder" : (path.hasPrefix("/") ? path : "/" + path)
         self.username = username
     }
     
